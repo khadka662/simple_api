@@ -5,53 +5,25 @@ let books = require("../data/books");
 // import model of database
 const Book = require("../models/Book");
 
+const bookController =require("../controllers/book-controller")
+
 // express.Router() --> is used to handle different routes moudalizer
 const router = express.Router();
 
 // this is main route for /api/books
-router
-  .route("/")
+router.route("/")
 
   // get all books
-  .get((req, res) => {
-    // convert JSON code to string for readable to the network
-    // res.json(books);
-
-    // get books data from db --> find() is an async function
-    // so, use either then or asyn/awiat
-
-    // method 1 - using Promise i.e. then/catch
-    Book.find()
-      .then((books) => res.json(books))
-      .catch((err) => console.log(err));
-
-    // method 2 - using asyn/await
-
-    // try {
-    //     const books = await Book.find();
-    //     res.json(books);
-    // }
-    // catch (error) {
-    //     console.log(error);
-    // }
-  })
-
+  .get(bookController.getAllBooks)
+    
   // add a book in the books list
 
-  .post((req, res) => {
-    Book.create(req.body)
-      .then((book) => res.status(201).json(book))
-      .create((err) => console.log(err));
-  })
+  .post(bookController.createBook)
 
   .put((req, res) => {
     res.status(405).json({ error: "PUT request is not allowed" });
   })
-  .delete((req, res) => {
-    Book.deleteMany()
-      .then((reply) => res.json(reply))
-      .catch((err) => console.log(err));
-  });
+  .delete(bookController.deleteAllBooks);
 
 // path for /api/books/:book_id
 router.route("/:book_id/reviews")
@@ -85,46 +57,14 @@ router.route("/:book_id/reviews")
   });
 
 router.route("/:book_id/reviews")
-  .get((req, res, next) => {
-    Book.findById(req.params.book_id)
-      .then((book) => {
-        if (!book) return res.status(404).json({ error: "book not found" });
-        res.json(book.reviews);
-      })
-      .catch(next);
-  })
+  .get(bookController.getABook)
 
-  .post((req, res, next) => {
-    Book.findById(req.params.book_id)
-      .then((book) => {
-        if (!book) return res.status(404).json({ error: "book not found" });
-        const review = {
-          text: req.body.text,
-        };
-        book.reviews.push(review);
-        book
-          .save()
-          .then((book) => res.status(201).json(book.reviews))
-          .catch(next);
-      })
-      .catch(next);
-  })
+  .post(bookController.updateABook)
 
   .put((req, res) => {
     res.status(405).json({ error: "Put request is not allowed" });
   })
-  .delete((req, res, next) => {
-    Book.findById(req.params.book_id)
-      .then((book) => {
-        if (!book) return res.status(404).json({ error: "book not found" });
-        book.reviews = [];
-        book
-          .save()
-          .then((book) => res.status(204).end())
-          .catch(next);
-      })
-      .catch(next);
-  });
+  .delete(bookController.deleteABook);
 
 // export it to use in other file
 router
